@@ -9,8 +9,10 @@ var log4js = require('log4js'),
     chokidar = require('chokidar'),
     path = require('path');
 
+const config_path = path.resolve(__dirname + '/../config/log4js.json');
+
 // Load the config.
-log4js.configure( path.resolve(__dirname + '/../../config/log4js.json') );
+log4js.configure(config_path);
 
 // Create default logger to log that our module was loaded and for
 // config update changes.
@@ -20,7 +22,7 @@ export var log = log4js.getLogger("result");
  * Monitor the log4js config file and reloading log instances if the file changes.
 **/
 var watcher = chokidar.watch(
-  path.resolve(__dirname + '/../../config/log4js.json'), {
+  config_path, {
     ignored: /(^|[\/\\])\../, // ignore dotfiles
     persistent: true,
     awaitWriteFinish: true
@@ -40,7 +42,7 @@ var watcher = chokidar.watch(
 function reloadlog(reason: string) {
   log.info(`Reloading log config due to config file ${reason}.`);
   log4js.shutdown( () => {
-    log4js.configure(__dirname + '/../../config/log4js.json');
+    log4js.configure(config_path);
     log = log4js.getLogger('reason');
   });
 }

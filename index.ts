@@ -1,5 +1,5 @@
 import {IRegion} from 'howsmydriving-utils';
-import {DummyRegion} from './src/dummy';
+import {DummyRegion} from './src/dummyregion';
 import {log} from './src/logging';
 
 var path = require('path'),
