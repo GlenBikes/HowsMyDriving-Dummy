@@ -1,10 +1,8 @@
-import {IRegion} from 'howsmydriving-utils';
-import {DummyRegion} from './src/dummyregion';
-import {log} from './src/logging';
+import { log } from './src/logging';
+import * as path from 'path';
 
-var path = require('path'),
-    pjson = require(path.resolve(__dirname + '/../package.json'));
+export { Region } from './src/dummyregion';
 
-export var Region: IRegion = new DummyRegion();
+let pjson = require(path.resolve(__dirname + '/../package.json'));
 
 log.info(`Module ${pjson.name} version '${pjson.version}' loaded.`);

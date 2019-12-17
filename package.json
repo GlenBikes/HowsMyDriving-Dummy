@@ -1,6 +1,6 @@
 {
   "name": "howsmydriving-dummy",
-  "version": "0.1.9",
+  "version": "0.1.21",
   "description": "Dummy region plug-in for @HowsMyDrivingWA.",
   "declaration": true,
   "main": "./dist/index.js",
@@ -8,22 +8,10 @@
   "typescript": {
     "definition": "definitions/index"
   },
-  "files": [
-    "config/*",
-    "definitions/**/*",
-    "dist/**/*"
-  ],
-  "scripts": {
-    "build": "gulp clean && gulp build && gulp test",
-    "copyconfigfiles": "gulp copyconfigfiles",
-    "start": "gulp build && node dist/index.js",
-    "test": "gulp test",
-    "release": "standard-version"
-  },
   "dependencies": {
     "chokidar": "^3.3.0",
     "express": "^4.14.0",
-    "howsmydriving-utils": "^0.1.38",
+    "howsmydriving-utils": "^0.1.56",
     "log4js": "^4.0.2",
     "node-localstorage": "^1.3.1",
     "request": "^2.88.0",
@@ -33,20 +21,35 @@
   "devDependencies": {
     "@types/mocha": "^5.2.6",
     "@types/node": "^12.12.14",
+    "@types/twit": "^2.2.23",
+    "del": "^5.1.0",
+    "gulp": "^4.0.2",
+    "gulp-cli": "^2.2.0",
     "gulp-mocha": "^7.0.2",
+    "gulp-prettier": "^2.3.0",
     "gulp-typescript": "^6.0.0-alpha.1",
     "mocha": "^6.2.2",
     "mocha-typescript": "^1.1.17",
     "path": "^0.12.7",
+    "prettier": "^1.19.1",
     "sinon": "^7.5.0",
     "standard-version": "^7.0.1",
     "ts-node": "^8.5.4",
-    "sinon": "^7.5.0",
-    "standard-version": "^7.0.1",
     "typescript": "^3.7.3"
   },
   "engines": {
     "node": "10.x"
+  },
+  "files": [
+    "definitions/**/*",
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "gulp clean && gulp build && gulp test",
+    "copyconfigfiles": "gulp copyconfigfiles",
+    "start": "gulp build && node dist/index.js",
+    "test": "gulp test",
+    "release": "standard-version"
   },
   "repository": {
     "type": "git",

@@ -1,0 +1,4 @@
+[2019-11-22T08:06:01.540] [INFO] _lastmention - Writing last mention id 1197788227777650689.
+[2019-11-22T08:45:40.139] [INFO] _lastmention - Writing last mention id 1197798195566264325.
+[2019-11-22T09:28:51.401] [INFO] _lastmention - Writing last mention id 1197809096558145538.
+[2019-11-22T09:34:02.302] [INFO] _lastmention - Writing last mention id 1197810361702866944.

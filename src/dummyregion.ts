@@ -1,38 +1,211 @@
-import {Citation} from 'howsmydriving-utils';
-import {ICitation} from 'howsmydriving-utils';
-import {IRegion} from 'howsmydriving-utils';
+import { Citation } from 'howsmydriving-utils';
+import { CompareNumericStrings } from 'howsmydriving-utils';
+import { ICitation } from 'howsmydriving-utils';
+import { CitationIds } from 'howsmydriving-utils';
+import { formatPlate } from 'howsmydriving-utils';
+import { IRegion } from 'howsmydriving-utils';
+import { Region } from 'howsmydriving-utils';
+import { createTweet } from 'howsmydriving-utils';
 
-import {log} from './logging';
+import { IDummyCitation } from './interfaces/idummycitation';
+import { DummyCitation } from './dummycitation';
+import { __REGION_NAME__ } from './common';
 
-export class DummyRegion implements IRegion {
-  readonly Name: string = "DummyCity";
-  
+import { log } from './logging';
+
+// TODO: Consolidate these.
+const parkingAndCameraViolationsText =
+    'Total parking and camera violations in __REGION__ for #__LICENSE__: __COUNT__',
+  violationsByYearText = 'Violations by year for #',
+  violationsByStatusText = 'Violations by status for #',
+  citationQueryText = 'License #__LICENSE__ has been queried __COUNT__ times.';
+
+export class DummyRegion extends Region {
+  constructor(name: string) {
+    super(name);
+    log.debug(
+      `Creating instance ${this.constructor.name} Region for region ${__REGION_NAME__}.`
+    );
+  }
+
   GetCitationsByPlate(plate: string, state: string): Promise<Array<Citation>> {
-    return new Promise<Array<Citation>>( (resolve, reject) => {
-      // We take the 1st set of numeric digits in the plate tnd return that # of citations
-      let num_citations_regex = /[0-9]+/;
-      
-      let num_citations_string: Array<string> = num_citations_regex.exec(plate);
-      
-      let num_citations = 0;
-      
-      if (num_citations_string && parseInt(num_citations_string[0]) != NaN) {
-        num_citations = parseInt(num_citations_string[0]);
+    return new Promise<Array<Citation>>((resolve, reject) => {
+      // We take all numeric digits in the license and total the numbers.
+      // If license contains x, y or z, return 0. Otherwise return the total.
+      let num_citations_regex = /[0-9]/g;
+
+      let digits_found: Array<string> = num_citations_regex.exec(plate);
+
+      let total: number = 0;
+
+      for (let i = 0; i < digits_found.length; i++) {
+        total += parseInt(digits_found[i]);
       }
-      
-      resolve([]);
+
+      let matches = /[a-zA-Z]/.exec(plate);
+      let xyz_found: boolean = matches && matches.length > 3;
+      let num_citations: number = xyz_found ? total : 0;
+
+      log.debug(
+        `License ${state}:${plate} has a numeric sum of ${total} and ${
+          xyz_found ? '' : 'not '
+        } enough alpha characters exist. Creating ${num_citations} citations.`
+      );
+
+      let citations: Array<ICitation> = [];
+
+      for (let i = 0; i < num_citations; i++) {
+        let citation: IDummyCitation = new DummyCitation({
+          citation_id: i + 1000,
+          license: `${state}:${plate}`,
+          region: Region.name,
+
+          Citation: i + 2000,
+          Type: 'PARKING',
+          Status: 'PAID',
+          ViolationDate: '12/05/2019',
+          ViolationLocation: '7208 E GREEN LAKE DR N'
+        });
+
+        citations.push(citation);
+      }
+
+      resolve(citations);
     });
   }
 
-  ProcessCitationsForRequest(citations: ICitation[], query_count: number): Array<string> {
-    // Return them in the order they should be rendered.
-    return [
-      "Here are the Dummy citations we found",
-      "There are lots of them",
-      "Summary by type:\nPARKING: 12\nCAMERA: 15",
-      "Summary by year:\n2019: 27"
-    ];
-  }
+  ProcessCitationsForRequest(
+    citations: ICitation[],
+    query_count: number
+  ): Array<string> {
+    var categorizedCitations: { [request_id: string]: number } = {};
+    // TODO: Does it work to convert Date's to string for sorting? Might have to use epoch.
+    var chronologicalCitations: {
+      [violation_date: string]: Array<ICitation>;
+    } = {};
+    var violationsByYear: { [violation_year: string]: number } = {};
+    var violationsByStatus: { [status: string]: number } = {};
 
+    if (!citations || Object.keys(citations).length == 0) {
+      // Should never happen. jurisdictions must return at least a dummy citation
+      throw new Error(
+        'Jurisdiction modules must return at least one citation, a dummy one if there are none.'
+      );
+    }
+
+    var license: string;
+    var region: string;
+
+    for (var i = 0; i < citations.length; i++) {
+      var citation = citations[i];
+      var year: number = 1970;
+      var violationDate = new Date(Date.now());
+
+      // All citations are from the same license
+      if (license == null) {
+        license = citation.license;
+      }
+
+      if (region == null) {
+        region = citation.region;
+      }
+
+      try {
+        violationDate = new Date(Date.parse(citation.ViolationDate));
+      } catch (e) {
+        // TODO: refactor error handling to a separate file
+        throw new Error(e);
+      }
+
+      // TODO: Is it possible to have more than 1 citation with exact same time?
+      // Maybe throw an exception if we ever encounter it...
+      if (!(violationDate.getTime().toString() in chronologicalCitations)) {
+        chronologicalCitations[
+          violationDate.getTime().toString()
+        ] = new Array();
+      }
+
+      chronologicalCitations[violationDate.getTime().toString()].push(citation);
+
+      if (!(citation.Type in categorizedCitations)) {
+        categorizedCitations[citation.Type] = 0;
+      }
+      categorizedCitations[citation.Type]++;
+
+      if (!(citation.Status in violationsByStatus)) {
+        violationsByStatus[citation.Status] = 0;
+      }
+      violationsByStatus[citation.Status]++;
+
+      year = violationDate.getFullYear();
+
+      if (!(year.toString() in violationsByYear)) {
+        violationsByYear[year.toString()] = 0;
+      }
+
+      violationsByYear[year.toString()]++;
+    }
+
+    var general_summary = parkingAndCameraViolationsText
+      .replace('__LICENSE__', formatPlate(license))
+      .replace('__REGION__', region)
+      .replace('__COUNT__', Object.keys(citations).length.toString());
+
+    Object.keys(categorizedCitations).forEach(key => {
+      var line = key + ': ' + categorizedCitations[key];
+
+      // Max twitter username is 15 characters, plus the @
+      general_summary += '\n';
+      general_summary += line;
+    });
+
+    general_summary += '\n\n';
+    general_summary += citationQueryText
+      .replace('__LICENSE__', formatPlate(license))
+      .replace('__COUNT__', query_count.toString());
+
+    var detailed_list = '';
+
+    var sortedChronoCitationKeys = Object.keys(chronologicalCitations).sort(
+      function(a: string, b: string) {
+        //return new Date(a).getTime() - new Date(b).getTime();
+        return CompareNumericStrings(a, b); //(a === b) ? 0 : ( a < b ? -1 : 1);
+      }
+    );
+
+    var first = true;
+
+    for (var i = 0; i < sortedChronoCitationKeys.length; i++) {
+      var key: string = sortedChronoCitationKeys[i];
+
+      chronologicalCitations[key].forEach(citation => {
+        if (first != true) {
+          detailed_list += '\n';
+        }
+        first = false;
+        detailed_list += `${citation.ViolationDate}, ${citation.Type}, ${citation.ViolationLocation}, ${citation.Status}`;
+      });
+    }
+
+    var temporal_summary: string =
+      violationsByYearText + formatPlate(license) + ':';
+    Object.keys(violationsByYear).forEach(key => {
+      temporal_summary += '\n';
+      temporal_summary += `${key}: ${violationsByYear[key].toString()}`;
+    });
+
+    var type_summary = violationsByStatusText + formatPlate(license) + ':';
+    Object.keys(violationsByStatus).forEach(key => {
+      type_summary += '\n';
+      type_summary += `${key}: ${violationsByStatus[key]}`;
+    });
+
+    // Return them in the order they should be rendered.
+    return [general_summary, detailed_list, type_summary, temporal_summary];
+  }
 }
 
+var RegionInstance: IRegion = new DummyRegion(__REGION_NAME__);
+
+export { RegionInstance as default };
+export { RegionInstance as Region };

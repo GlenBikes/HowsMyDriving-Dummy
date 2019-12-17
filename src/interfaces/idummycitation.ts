@@ -1,4 +1,4 @@
-import {ICitation} from 'howsmydriving-utils';
+import { ICitation } from 'howsmydriving-utils';
 
 export interface IDummyCitation extends ICitation {
   [index: string]: any;
@@ -6,6 +6,5 @@ export interface IDummyCitation extends ICitation {
   Type: string;
   Status: string;
   ViolationDate: string;
-  ViolationLocation: string
+  ViolationLocation: string;
 }
-
