@@ -1,3 +1,5 @@
+import { DumpObject } from 'howsmydriving-utils';
+
 import { log } from './src/logging';
 import * as path from 'path';
 

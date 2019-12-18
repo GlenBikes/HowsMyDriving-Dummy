@@ -6,6 +6,7 @@ import { formatPlate } from 'howsmydriving-utils';
 import { IRegion } from 'howsmydriving-utils';
 import { Region } from 'howsmydriving-utils';
 import { createTweet } from 'howsmydriving-utils';
+import { DumpObject } from 'howsmydriving-utils';
 
 import { IDummyCitation } from './interfaces/idummycitation';
 import { DummyCitation } from './dummycitation';
@@ -29,12 +30,16 @@ export class DummyRegion extends Region {
   }
 
   GetCitationsByPlate(plate: string, state: string): Promise<Array<Citation>> {
+    log.debug(
+      `Getting citations for ${state}:${plate} in region ${__REGION_NAME__}.`
+    );
     return new Promise<Array<Citation>>((resolve, reject) => {
       // We take all numeric digits in the license and total the numbers.
-      // If license contains x, y or z, return 0. Otherwise return the total.
-      let num_citations_regex = /[0-9]/g;
+      // If license contains x > 2 alpha , return 0. Otherwise return the total.
+      let num_digits_regex = /[0-9]/g;
+      let num_alpha_regex = /[a-zA-Z]/g;
 
-      let digits_found: Array<string> = num_citations_regex.exec(plate);
+      let digits_found: Array<string> = plate.match(num_digits_regex);
 
       let total: number = 0;
 
@@ -42,14 +47,14 @@ export class DummyRegion extends Region {
         total += parseInt(digits_found[i]);
       }
 
-      let matches = /[a-zA-Z]/.exec(plate);
-      let xyz_found: boolean = matches && matches.length > 3;
-      let num_citations: number = xyz_found ? total : 0;
+      let letters_found = ((plate || '').match(num_alpha_regex) || []).length;
+      let xyz_found: boolean = letters_found > 3;
+      let num_citations: number = xyz_found ? 0 : total;
 
       log.debug(
-        `License ${state}:${plate} has a numeric sum of ${total} and ${
+        `License ${plate} has a numeric sum of ${total} and ${
           xyz_found ? '' : 'not '
-        } enough alpha characters exist. Creating ${num_citations} citations.`
+        }enough alpha characters exist to override that. Creating ${num_citations} citations.`
       );
 
       let citations: Array<ICitation> = [];
@@ -58,7 +63,7 @@ export class DummyRegion extends Region {
         let citation: IDummyCitation = new DummyCitation({
           citation_id: i + 1000,
           license: `${state}:${plate}`,
-          region: Region.name,
+          region: __REGION_NAME__,
 
           Citation: i + 2000,
           Type: 'PARKING',
@@ -205,7 +210,10 @@ export class DummyRegion extends Region {
   }
 }
 
-var RegionInstance: IRegion = new DummyRegion(__REGION_NAME__);
+var RegionInstance: IRegion;
+
+log.info(`Creating DummyRegion instance with region name ${__REGION_NAME__}.`);
+RegionInstance = new DummyRegion(__REGION_NAME__);
 
 export { RegionInstance as default };
 export { RegionInstance as Region };
