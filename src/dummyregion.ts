@@ -66,11 +66,13 @@ export class DummyRegion extends Region {
           region: __REGION_NAME__,
 
           Citation: i + 2000,
-          Type: 'PARKING',
-          Status: 'PAID',
-          ViolationDate: '12/05/2019',
-          ViolationLocation: '7208 E GREEN LAKE DR N'
+          Type: CitationType(),
+          Status: CitationStatus(),
+          ViolationDate: CitationValidationDate(),
+          ViolationLocation: CitationValidationLocation()
         });
+
+        log.debug(`Creating citation: ${DumpObject(citation)}.`);
 
         citations.push(citation);
       }
@@ -208,6 +210,61 @@ export class DummyRegion extends Region {
     // Return them in the order they should be rendered.
     return [general_summary, detailed_list, type_summary, temporal_summary];
   }
+}
+
+function CitationType(): string {
+  const citation_types = [
+    'PARKING',
+    'TRAFFIC CAMERA',
+    'INFRACTION',
+    'EXPLODING CAR',
+    'ASSHOLE DRIVIST',
+    'PARKING IN BIKE LANE'
+  ];
+
+  return citation_types[Math.floor(Math.random() * citation_types.length)];
+}
+
+function CitationStatus(): string {
+  const citation_statuses = ['PAID', 'ACTIVE', 'DISPOSED', 'COLLECTIONS'];
+
+  return citation_statuses[
+    Math.floor(Math.random() * citation_statuses.length)
+  ];
+}
+
+function CitationValidationDate(): string {
+  const days_in_month = {
+    1: 31,
+    2: 28,
+    3: 31,
+    4: 30,
+    5: 31,
+    6: 30,
+    7: 31,
+    8: 31,
+    9: 30,
+    10: 31,
+    11: 30,
+    12: 31
+  };
+  var month = Math.floor(Math.random() * 12) + 1;
+  var day = Math.floor(Math.random() * days_in_month[month]) + 1;
+  var year = Math.floor(Math.random() * 10) + 2010;
+
+  return `${month}/${day}/${year}`;
+}
+
+function CitationValidationLocation(): string {
+  const directions = ['NE', 'NW', 'SE', 'SW'];
+  const street_types = ['St', 'Ave', 'Blvd', 'Circle', 'Ct'];
+  var num = Math.floor(Math.random() * 100000) + 1;
+  var dir = directions[Math.floor(Math.random() * 4)];
+  var street = Math.floor(Math.random() * 145) + 1;
+  var street_type =
+    street_types[Math.floor(Math.random() * street_types.length)];
+
+  return `${num} ${dir} ${street}th ${street_type}`;
 }
 
 var RegionInstance: IRegion;
