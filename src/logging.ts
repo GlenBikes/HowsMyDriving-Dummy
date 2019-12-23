@@ -1,4 +1,4 @@
-let app_root_dir = require('app-root-dir').get();
+const packpath = require('packpath');
 
 import { __REGION_NAME__ } from './common';
 
@@ -13,7 +13,10 @@ var log4js = require('log4js'),
   chokidar = require('chokidar'),
   path = require('path');
 
-const config_path = path.resolve(app_root_dir + '/dist/config/log4js.json');
+let packpath_parent = packpath.parent() ? packpath.parent() : packpath.self();
+let packpath_self = packpath.self();
+
+const config_path = path.resolve(packpath_parent + '/dist/config/log4js.json');
 
 // Load the config.
 log4js.configure(config_path);
@@ -23,7 +26,7 @@ log4js.configure(config_path);
 export var log = log4js.getLogger('result', `${__REGION_NAME__}: `);
 
 log.addContext('module', __REGION_NAME__);
-log.info(`app_root_dir: ${app_root_dir}.`);
+log.info(`log4js.json: ${config_path}.`);
 
 /**
  * Monitor the log4js config file and reloading log instances if the file changes.
