@@ -16,7 +16,7 @@ import { log } from './logging';
 
 // TODO: Consolidate these.
 const parkingAndCameraViolationsText =
-    'Total parking and camera violations in __REGION__ for #__LICENSE__: __COUNT__',
+    'Total __REGION__ parking and camera violations for #__LICENSE__: __COUNT__',
   violationsByYearText = 'Violations by year for #',
   violationsByStatusText = 'Violations by status for #',
   citationQueryText = 'License #__LICENSE__ has been queried __COUNT__ times.';
@@ -47,14 +47,15 @@ export class DummyRegion extends Region {
         total += parseInt(digits_found[i]);
       }
 
+      const req_alpha_for_no_citations: number = 4;
       let letters_found = ((plate || '').match(num_alpha_regex) || []).length;
-      let xyz_found: boolean = letters_found > 3;
+      let xyz_found: boolean = letters_found >= req_alpha_for_no_citations;
       let num_citations: number = xyz_found ? 0 : total;
 
       log.debug(
         `License ${plate} has a numeric sum of ${total} and ${
           xyz_found ? '' : 'not '
-        }enough alpha characters exist to override that. Creating ${num_citations} citations.`
+        }less than ${req_alpha_for_no_citations} alpha characters exist to override that. Creating ${num_citations} citations.`
       );
 
       let citations: Array<ICitation> = [];
@@ -72,7 +73,9 @@ export class DummyRegion extends Region {
           ViolationLocation: CitationValidationLocation()
         });
 
-        log.debug(`Creating citation: ${DumpObject(citation)}.`);
+        log.debug(
+          `Creating citation id: ${citation.citation_id} license: ${citation.license} Type: ${citation.Type} Status: ${citation.Status} ViolationDate: ${citation.ViolationDate} ViolationLocation: ${citation.ViolationLocation}.`
+        );
 
         citations.push(citation);
       }
