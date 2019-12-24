@@ -1,0 +1,12 @@
+.aws/**
+.bash*/**
+.oresoftware/**
+definitions/**
+dist/**
+log/**
+.localstore/**
+node_modules/**
+.v8*
+.vi*
+
+

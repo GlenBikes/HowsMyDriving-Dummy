@@ -1,0 +1,67 @@
+{
+  "name": "howsmydriving-dummy",
+  "version": "0.1.45",
+  "description": "Dummy region plug-in for @HowsMyDrivingWA.",
+  "declaration": true,
+  "main": "./dist/index.js",
+  "types": "./definitions/index.d.ts",
+  "typescript": {
+    "definition": "definitions/index"
+  },
+  "dependencies": {
+    "@types/node": "^12.12.14",
+    "chokidar": "^3.3.0",
+    "howsmydriving-utils": "^0.1.95",
+    "log4js": "^4.0.2",
+    "node-localstorage": "^1.3.1",
+    "packpath": "^0.1.0",
+    "uuid": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/mocha": "^5.2.6",
+    "del": "^5.1.0",
+    "gulp": "^4.0.2",
+    "gulp-cli": "^2.2.0",
+    "gulp-mocha": "^7.0.2",
+    "gulp-prettier": "^2.3.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "mocha": "^6.2.2",
+    "mocha-typescript": "^1.1.17",
+    "path": "^0.12.7",
+    "prettier": "^1.19.1",
+    "sinon": "^7.5.0",
+    "standard-version": "^7.0.1",
+    "ts-node": "^8.5.4",
+    "typescript": "^3.7.3"
+  },
+  "engines": {
+    "node": "10.x"
+  },
+  "files": [
+    "definitions/**/*",
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "gulp clean && gulp build && gulp test",
+    "copyconfigfiles": "gulp copyconfigfiles",
+    "start": "gulp build && node dist/index.js",
+    "test": "gulp test",
+    "release": "standard-version"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/glenbikes/howsmydriving-dummy.git"
+  },
+  "keywords": [
+    "howsmydriving",
+    "howsmydriving-seattle",
+    "howsmydriving-dummy",
+    "howsmydriving-utils",
+    "howsmydrivingwa",
+    "howsmydrivingny",
+    "howsmydrivingdc"
+  ],
+  "author": "Glen Buhlmann @GlenBikes",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "homepage": "https://www.npmjs.com/package/howsmydriving-dummy"
+}
