@@ -10,7 +10,6 @@ let packpath_parent = packpath.parent() ? packpath.parent() : packpath.self();
 let packpath_self = packpath.self();
 
 const pjson_path = path.resolve(packpath_self + '/package.json');
-log.info(`package.json: ${pjson_path}.`);
 
 let pjson = require(pjson_path);
 

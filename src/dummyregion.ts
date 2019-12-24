@@ -272,7 +272,6 @@ function CitationValidationLocation(): string {
 
 var RegionInstance: IRegion;
 
-log.info(`Creating DummyRegion instance with region name ${__REGION_NAME__}.`);
 RegionInstance = new DummyRegion(__REGION_NAME__);
 
 export { RegionInstance as default };
