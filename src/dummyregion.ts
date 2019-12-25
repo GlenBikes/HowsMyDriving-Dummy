@@ -54,7 +54,7 @@ export class DummyRegion extends Region {
 
       log.debug(
         `License ${plate} has a numeric sum of ${total} and ${
-          xyz_found ? 'more than ' : 'less than '
+          xyz_found ? 'more than' : 'less than'
         } ${req_alpha_for_no_citations} alpha characters exist to override that. Creating ${num_citations} citations.`
       );
 
