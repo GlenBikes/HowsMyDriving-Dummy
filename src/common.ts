@@ -1,1 +1,1 @@
-export var __REGION_NAME__: string = 'DummyRegion';
+export var __REGION_NAME__: string = 'Fake Gotham City';
