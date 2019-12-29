@@ -1,16 +1,58 @@
 const packpath = require('packpath');
-import { DumpObject } from 'howsmydriving-utils';
+const appRootDir = require('app-root-dir').get();
+const appRootPath = require('app-root-path');
+const appRoot = require('app-root');
 
-import { log } from './src/logging';
 import * as path from 'path';
-
-export { Region } from './src/dummyregion';
 
 let packpath_parent = packpath.parent() ? packpath.parent() : packpath.self();
 let packpath_self = packpath.self();
 
-const pjson_path = path.resolve(packpath_self + '/package.json');
+console.log(
+  `howsmydriving-twitter:\n - packpath_self: ${packpath_self}\n - packpath_parent: ${packpath.parent()}\n - app-root-dir: ${appRootDir}\n - app-root-path: ${appRootPath}\n - app-root (current): see below\n - app-root (root): see below\n - __dirname: ${__dirname}\n - .: ${path.resolve(
+    '.'
+  )}`
+);
 
-let pjson = require(pjson_path);
+appRoot({
+  directory: '.',
+  success: function(roots) {
+    console.log(`howsmydriving-twitter:\n - app-root (current): ${roots}`);
+  }
+});
 
-log.info(`Module ${pjson.name} version '${pjson.version}' loaded.`);
+appRoot({
+  directory: '/',
+  success: function(roots) {
+    console.log(`howsmydriving-twitter:\n - app-root (root): ${roots}`);
+  }
+});
+
+export const log4js_config_path = path.resolve(
+  appRootDir + '/dist/config/log4js.json'
+);
+
+console.log(
+  `howsmydriving-twitter: log4js_config_path:\n - ${log4js_config_path}`
+);
+
+import { DumpObject } from 'howsmydriving-utils';
+
+import { log } from './src/logging';
+
+export { Region } from './src/dummyregion';
+
+const package_config_path = path.resolve(packpath_self + '/package.json');
+
+let pjson = require(package_config_path);
+
+const __MODULE_NAME__ = pjson.name;
+const __MODULE_VERSION__ = pjson.version;
+
+log.info(
+  `howsmydriving-dummy: package_config_path: ${package_config_path}, __MODULE_NAME__: ${__MODULE_NAME__}.`
+);
+
+log.info(
+  `howsmydriving-dummy: Module ${__MODULE_NAME__} version '${__MODULE_VERSION__}' loaded.`
+);
