@@ -1,7 +1,36 @@
-import { sleep } from 'howsmydriving-utils';
-const packpath = require('packpath');
+import * as packpath from 'packpath';
+import * as path from 'path';
+import * as fs from 'fs';
 
-import { __REGION_NAME__ } from './common';
+import { sleep } from 'howsmydriving-utils';
+
+import { getAppRootPath } from './util/process';
+
+export const __REGION_NAME__: string = 'Fake Gotham City';
+
+let packpath_parent = packpath.parent() ? packpath.parent() : packpath.self();
+let packpath_self = packpath.self();
+
+let package_json_path = path.resolve(__dirname + '/../package.json');
+
+if (!fs.existsSync(package_json_path)) {
+  package_json_path = path.resolve(__dirname + '/../../package.json');
+
+  if (!fs.existsSync(package_json_path)) {
+    throw new Error(`Cannot find package.json: ${__dirname}.`);
+  }
+}
+
+var pjson = require(package_json_path);
+
+// Put this at very top so other modules can import it without taking
+// dependencies on something else in the module being instantiated.
+export const __MODULE_NAME__ = pjson.name;
+export const __MODULE_VERSION__ = pjson.version;
+
+export const log4js_config_path = path.resolve(
+  getAppRootPath() + '/dist/config/log4js.json'
+);
 
 /**
  *  Standard logging for HowsMyDriving modules.
@@ -11,27 +40,26 @@ import { __REGION_NAME__ } from './common';
  *  other plugin logs.
  **/
 var log4js = require('log4js'),
-  chokidar = require('chokidar'),
-  path = require('path');
-
-let packpath_parent = packpath.parent() ? packpath.parent() : packpath.self();
-let packpath_self = packpath.self();
-
-const config_path = path.resolve(packpath_parent + '/dist/config/log4js.json');
+  chokidar = require('chokidar');
 
 // Load the config.
-log4js.configure(config_path);
+log4js.configure(log4js_config_path);
 
 // Create default logger to log that our module was loaded and for
 // config update changes.
-export var log = log4js.getLogger('result', `${__REGION_NAME__}: `);
+var temp_log = log4js.getLogger('result', `${__REGION_NAME__}: `);
 
-log.addContext('module', __REGION_NAME__);
+temp_log.addContext('module', __REGION_NAME__);
+temp_log.info(
+  `howsmydriving-dummy: adding log4js (${log4js_config_path}) context: ${__REGION_NAME__}.`
+);
+
+export const log = temp_log;
 
 /**
  * Monitor the log4js config file and reloading log instances if the file changes.
  **/
-var watcher = chokidar.watch(config_path, {
+var watcher = chokidar.watch(log4js_config_path, {
   ignored: /(^|[\/\\])\../, // ignore dotfiles
   persistent: true,
   awaitWriteFinish: true
