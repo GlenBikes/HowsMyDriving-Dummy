@@ -221,15 +221,22 @@ function CitationType(): string {
     'TRAFFIC CAMERA',
     'INFRACTION',
     'EXPLODING CAR',
-    'ASSHOLE DRIVIST',
-    'PARKING IN BIKE LANE'
+    'G@SSHOLE DRIVIST',
+    'PARKING IN BIKE LANE',
+    'BOOMER ENTITLEMENT'
   ];
 
   return citation_types[Math.floor(Math.random() * citation_types.length)];
 }
 
 function CitationStatus(): string {
-  const citation_statuses = ['PAID', 'ACTIVE', 'DISPOSED', 'COLLECTIONS'];
+  const citation_statuses = [
+    'PAID',
+    'ACTIVE',
+    'DISPOSED',
+    'COLLECTIONS',
+    'BUDDYS_A_JUDGE'
+  ];
 
   return citation_statuses[
     Math.floor(Math.random() * citation_statuses.length)
