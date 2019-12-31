@@ -10,7 +10,7 @@ import { DumpObject } from 'howsmydriving-utils';
 
 import { IDummyCitation } from './interfaces/idummycitation';
 import { DummyCitation } from './dummycitation';
-import { __REGION_NAME__ } from './common';
+import { __REGION_NAME__ } from './logging';
 
 import { log } from './logging';
 
