@@ -4,6 +4,7 @@ import {
   Citation,
   ICollision,
   Collision,
+  DateDiff,
   IRegion,
   Region
 } from 'howsmydriving-utils';
@@ -222,105 +223,164 @@ export class DummyRegion extends Region {
 
   GetRecentCollisions(): Promise<Array<ICollision>> {
     return Promise.all([
-      this.GetLastCollisionsWithCondition('FATALITIES>0', 1),
-      this.GetLastCollisionsWithCondition('SERIOUSINJURIES>0', 1),
-      this.GetLastCollisionsWithCondition('INJURIES>0', 1)
+      this.getLastCollisionsWithCondition('FATALITIES>0', 1),
+      this.getLastCollisionsWithCondition('SERIOUSINJURIES>0', 1),
+      this.getLastCollisionsWithCondition('INJURIES>0', 1)
     ]);
   }
 
-  async ProcessCollisions(
-    collisions: Array<ICollision>
-  ): Promise<Array<string>> {
-    let delete_collisions: Array<ICollision> = [];
-    let tweets: Array<string> = [];
-
-    let collision_types = {
-      fatal: {
-        last_tweet_date: 0,
-        latest_collision: undefined
-      },
-      'serious injury': {
-        last_tweet_date: 0,
-        latest_collision: undefined
-      },
-      injury: {
-        last_tweet_date: 0,
-        latest_collision: undefined
-      }
-    };
-
-    log.info(`Getting collision records for ${this.name}...`);
-
-    Object.keys(collision_types).forEach(async collision_type => {
-      let key: string = `last_${collision_type}_tweet_date`;
-      log.info(`Getting StateStore value for ${key}.`);
-      let value: string = await this.state_store.GetStateValue(key);
-      collision_types[collision_type].last_tweet_date = parseInt(value);
-    });
-
-    log.info(
-      `Retrieved ${collisions.length} collision records for ${this.name}...`
-    );
-
-    var fatality_collision: ICollision;
-    var serious_injury_collision: ICollision;
-    var injury_collision: ICollision;
-
-    collisions.forEach(collision => {
-      log.info(`Processing collision ${collision.id}`);
-      let collision_type: string = this.getCollisionType(collision);
-
-      if (
-        !collision_types[collision_type].latest_collision ||
-        collision_types[collision_type].latest_collision.date_time <
-          collision.date_time
-      ) {
-        log.debug(
-          `Collision ${collision.id} is a ${collision_type} collision.`
-        );
-        collision_types[collision_type].latest_collision = collision;
-      } else {
-        // This is no longer the most recent fatality collision record.
-        // Add it to list of records to mark processed.
-        delete_collisions.push(collision);
-      }
-    });
-
-    // Fatalities are serious injuries which are injuries.
-    if (!collision_types['serious injury'].latest_collision) {
-      collision_types['serious injury'].latest_collision;
-    }
-    if (!collision_types['injury'].latest_collision) {
-      collision_types['injury'].latest_collision;
-    }
-    let now: number = Date.now();
-
-    log.debug(`Checking to see if we will tweet anything...`);
-
-    // Tweet last fatal collision once per month and
-    // whenever there is a new one.
-    Object.keys(collision_types).forEach(async collision_type => {
-      let tweet: string = this.getTweetFromCollision(
-        collision_types[collision_type].latest_collision,
-        collision_type,
-        collision_types[collision_type].last_tweet_date
-      );
-      if (tweet && tweet.length) {
-        tweets.push(tweet);
-      }
-    });
-
-    log.trace(`Returning tweets: ${DumpObject(tweets)}`);
-    return tweets;
+  ProcessCollisions(collisions: Array<ICollision>): Promise<Array<string>> {
+    return this.processCollisionsForTweets(collisions);
   }
 
-  private GetLastCollisionsWithCondition(
+  processCollisionsForTweets(
+    collisions: Array<ICollision>
+  ): Promise<Array<string>> {
+    return new Promise<Array<string>>((resolve, reject) => {
+      let now: number = Date.now();
+      let tweets: Array<string> = [];
+
+      let collision_types = {
+        fatal: {
+          last_tweet_date: 0,
+          latest_collision: undefined,
+          tweet_frequency_days: 7
+        },
+        'serious injury': {
+          last_tweet_date: 0,
+          latest_collision: undefined,
+          tweet_frequency_days: 7
+        },
+        injury: {
+          last_tweet_date: 0,
+          latest_collision: undefined,
+          tweet_frequency_days: 7
+        }
+      };
+
+      log.debug(`Getting collision records for ${this.name}...`);
+
+      let state_promises: Array<Promise<string>> = [];
+
+      Object.keys(collision_types).forEach(collision_type => {
+        let key: string = `last_${collision_type}_tweet_date`;
+        log.trace(
+          `Getting last tweet date for collision type ${collision_type}...`
+        );
+
+        let state_promise = this.state_store
+          .GetStateValue(key)
+          .then(value => {
+            log.trace(
+              `Retrieved last tweet date for collision type ${collision_type}: ${value}.`
+            );
+            collision_types[collision_type].last_tweet_date = parseInt(value);
+            return value;
+          })
+          .catch((err: Error) => {
+            throw err;
+          });
+
+        state_promises.push(state_promise);
+      });
+
+      Promise.all(state_promises)
+        .then(() => {
+          let store_updates: {
+            [key: string]: string;
+          } = {};
+
+          log.debug(`Processing ${collisions.length} collision records...`);
+
+          var fatality_collision: ICollision;
+          var serious_injury_collision: ICollision;
+          var injury_collision: ICollision;
+
+          collisions.forEach(collision => {
+            log.debug(`Processing collision ${collision.id}...`);
+            let collision_type: string = this.getCollisionType(collision);
+
+            if (
+              !collision_types[collision_type].latest_collision ||
+              collision_types[collision_type].latest_collision.date_time <
+                collision.date_time
+            ) {
+              log.debug(
+                `Collision ${collision.id} is so far the most recent ${collision_type} collision.`
+              );
+              collision_types[collision_type].latest_collision = collision;
+            } else {
+              log.warn(
+                `Collision ${collision.id} was passed in but is not the most recent ${collision_type} collision.`
+              );
+            }
+          });
+
+          // Fatalities are serious injuries which are injuries.
+          if (!collision_types['serious injury'].latest_collision) {
+            collision_types['serious injury'].latest_collision;
+          }
+          if (!collision_types['injury'].latest_collision) {
+            collision_types['injury'].latest_collision;
+          }
+
+          // Tweet last fatal collision once per month and
+          // whenever there is a new one.
+          Object.keys(collision_types).forEach(async collision_type => {
+            if (
+              collision_types[collision_type].latest_collision &&
+              (collision_types[collision_type].latest_collision.date_time >
+                collision_types[collision_type].last_tweet_date ||
+                DateDiff(
+                  'd',
+                  new Date(collision_types[collision_type].last_tweet_date),
+                  new Date()
+                ) >= collision_types[collision_type].tweet_frequency_days)
+            ) {
+              let tweet: string = this.getTweetFromCollision(
+                collision_types[collision_type].latest_collision,
+                collision_type,
+                collision_types[collision_type].last_tweet_date
+              );
+              if (tweet && tweet.length) {
+                let key: string = `last_${collision_type}_tweet_date`;
+
+                store_updates[key] = now.toString();
+                tweets.push(tweet);
+              }
+            }
+          });
+
+          if (Object.keys(store_updates).length > 0) {
+            log.trace(`Wri;ting state values:\n${DumpObject(store_updates)}`);
+
+            this.state_store
+              .PutStateValues(store_updates)
+              .then(() => {
+                log.trace(`Returning ${tweets.length} tweets.`);
+                resolve(tweets);
+              })
+              .catch((err: Error) => {
+                throw err;
+              });
+          } else {
+            log.trace(`No store updates to make.`);
+
+            log.trace(`Returning ${tweets.length} tweets.`);
+            resolve(tweets);
+          }
+        })
+        .catch((err: Error) => {
+          throw err;
+        });
+    });
+  }
+
+  private getLastCollisionsWithCondition(
     condition: string,
     count: number = 1
   ): Promise<ICollision> {
     return new Promise<any>((resolve, reject) => {
-      log.info(`GetLastFatalCollision: In the async code.`);
-
       let collision = new Collision({
         id: `ID-${this.name}-${condition}`,
         x: -122.32143015695232,
@@ -347,8 +407,6 @@ export class DummyRegion extends Region {
         fatality_count: condition.includes('FATALITIES') ? 1 : 0,
         dui: false
       } as ICollision);
-
-      log.info(`Resolving collision: ${DumpObject(collision)}`);
 
       resolve(collision);
     });
@@ -378,6 +436,12 @@ export class DummyRegion extends Region {
     last_tweeted: number
   ) {
     let tweet: string = undefined;
+
+    log.info(
+      `getTweetFromCollision: Looking at ${
+        collision ? collision.id : '***null collision***'
+      }:`
+    );
 
     if (
       collision.date_time > last_tweeted ||
