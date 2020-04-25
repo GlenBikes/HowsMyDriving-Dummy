@@ -6,7 +6,9 @@ import {
   Collision,
   DateDiff,
   IRegion,
-  Region
+  Region,
+  RegionFactory,
+  IStateStore
 } from 'howsmydriving-utils';
 import { CitationIds } from 'howsmydriving-utils';
 import { formatPlate } from 'howsmydriving-utils';
@@ -26,11 +28,22 @@ const parkingAndCameraViolationsText =
   violationsByStatusText = 'Violations by status for #',
   citationQueryText = 'License #__LICENSE__ has been queried __COUNT__ times.';
 
+export class DummyRegionFactory extends RegionFactory {
+  public name: string = __REGION_NAME__;
+
+  public createRegion(state_store: IStateStore): Promise<Region> {
+    let region: DummyRegion = new DummyRegion(state_store);
+
+    return Promise.resolve(region);
+  }
+}
+
 export class DummyRegion extends Region {
-  constructor(name: string) {
-    super(name);
+  constructor(state_store: IStateStore) {
+    super(__REGION_NAME__, state_store);
+
     log.debug(
-      `Creating instance ${this.constructor.name} Region for region ${__REGION_NAME__}.`
+      `Creating instance of ${this.name} for region ${__REGION_NAME__}`
     );
   }
 
@@ -352,7 +365,7 @@ export class DummyRegion extends Region {
           });
 
           if (Object.keys(store_updates).length > 0) {
-            log.trace(`Wri;ting state values:\n${DumpObject(store_updates)}`);
+            log.trace(`Writing state values:\n${DumpObject(store_updates)}`);
 
             this.state_store
               .PutStateValues(store_updates)
@@ -528,9 +541,7 @@ function CitationValidationLocation(): string {
   return `${num} ${dir} ${street}th ${street_type}`;
 }
 
-var RegionInstance: IRegion;
+let Factory: RegionFactory = new DummyRegionFactory();
 
-RegionInstance = new DummyRegion(__REGION_NAME__);
-
-export { RegionInstance as default };
-export { RegionInstance as Region };
+export { Factory as default };
+export { Factory };
