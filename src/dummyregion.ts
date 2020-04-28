@@ -1,10 +1,11 @@
+const moment = require('moment');
+
 import { CompareNumericStrings } from 'howsmydriving-utils';
 import {
   ICitation,
   Citation,
   ICollision,
   Collision,
-  DateDiff,
   IRegion,
   Region,
   RegionFactory,
@@ -344,10 +345,9 @@ export class DummyRegion extends Region {
               collision_types[collision_type].latest_collision &&
               (collision_types[collision_type].latest_collision.date_time >
                 collision_types[collision_type].last_tweet_date ||
-                DateDiff(
-                  'd',
-                  new Date(collision_types[collision_type].last_tweet_date),
-                  new Date()
+                moment(Date.now()).diff(
+                  moment(collision_types[collision_type].last_tweet_date),
+                  'days'
                 ) >= collision_types[collision_type].tweet_frequency_days)
             ) {
               let tweet: string = this.getTweetFromCollision(

@@ -1,6 +1,6 @@
 {
   "name": "howsmydriving-dummy",
-  "version": "0.1.91",
+  "version": "0.1.92",
   "description": "Dummy region plug-in for @HowsMyDrivingWA.",
   "declaration": true,
   "main": "./dist/index.js",
@@ -11,8 +11,9 @@
   "dependencies": {
     "@types/node": "^12.12.14",
     "chokidar": "^3.3.0",
-    "howsmydriving-utils": "^0.1.187",
+    "howsmydriving-utils": "^0.1.190",
     "log4js": "^4.0.2",
+    "moment": "^2.24.0",
     "packpath": "^0.1.0",
     "uuid": "^3.3.3"
   },
