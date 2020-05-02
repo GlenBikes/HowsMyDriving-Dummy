@@ -16,8 +16,10 @@ import { formatPlate } from 'howsmydriving-utils';
 import { createTweet } from 'howsmydriving-utils';
 import { DumpObject } from 'howsmydriving-utils';
 
-import { IDummyCitation } from './interfaces/idummycitation';
-import { DummyCitation } from './dummycitation';
+import { IDummyCitation, DummyCitation } from './dummycitation';
+
+import { IDummyCollision, DummyCollision } from './dummycollision';
+
 import { __REGION_NAME__ } from './logging';
 
 import { log } from './logging';
@@ -394,7 +396,7 @@ export class DummyRegion extends Region {
     count: number = 1
   ): Promise<ICollision> {
     return new Promise<any>((resolve, reject) => {
-      let collision = new Collision({
+      let collision = new DummyCollision({
         id: `ID-${this.name}-${condition}`,
         x: -122.32143015695232,
         y: 47.57391033893609,
@@ -419,7 +421,7 @@ export class DummyRegion extends Region {
           : 0,
         fatality_count: condition.includes('FATALITIES') ? 1 : 0,
         dui: false
-      } as ICollision);
+      } as any);
 
       resolve(collision);
     });
