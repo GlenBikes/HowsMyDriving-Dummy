@@ -1,8 +1,16 @@
 import { ICitation } from 'howsmydriving-utils';
 import { Citation } from 'howsmydriving-utils';
-import { IDummyCitation } from './interfaces/idummycitation';
 
 import { log } from './logging';
+
+export interface IDummyCitation extends ICitation {
+  [index: string]: any;
+  Citation: number;
+  Type: string;
+  Status: string;
+  ViolationDate: string;
+  ViolationLocation: string;
+}
 
 export class DummyCitation extends Citation implements IDummyCitation {
   [index: string]: any;
