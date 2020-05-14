@@ -238,11 +238,19 @@ export class DummyRegion extends Region {
   }
 
   GetRecentCollisions(): Promise<Array<ICollision>> {
-    return Promise.all([
-      this.getLastCollisionsWithCondition('FATALITIES>0', 1),
-      this.getLastCollisionsWithCondition('SERIOUSINJURIES>0', 1),
-      this.getLastCollisionsWithCondition('INJURIES>0', 1)
-    ]);
+    return new Promise<Array<ICollision>>((resolve, reject) => {
+      log.info(`Getting recent ${this.name} collisions...`);
+
+      Promise.all([
+        this.getLastCollisionsWithCondition('FATALITIES>0', 1),
+        this.getLastCollisionsWithCondition('SERIOUSINJURIES>0', 1),
+        this.getLastCollisionsWithCondition('INJURIES>0', 1)
+      ]).then(collisions => {
+        log.info(`Returning ${collisions.length} collisions.`);
+
+        resolve(collisions);
+      });
+    });
   }
 
   ProcessCollisions(collisions: Array<ICollision>): Promise<Array<string>> {
